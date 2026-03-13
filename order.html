@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформить заказ — Samat.D.K Pizza</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        .order-section {
+            padding: 120px 20px; /* Отступ сверху, чтобы не перекрывал хедер */
+            display: flex;
+            justify-content: center;
+            background: #f7f7f7;
+            min-height: 100vh;
+        }
+        .order-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        .order-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        /* Валидация: если введено неверно */
+        .input-group input:focus:invalid {
+            border-color: #e74c3c;
+        }
+        /* Валидация: если введено верно */
+        .input-group input:focus:valid {
+            border-color: #2ecc71;
+        }
+        .btn-send {
+            width: 100%;
+            background: #c27b39; /* Твой фирменный цвет */
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-send:hover {
+            background: #a8642e;
+        }
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">☕ Samat.D.K Pizza</div>
+        <nav>
+            <a href="index.html">Главная</a>
+            <a href="menu.html">Меню</a>
+        </nav>
+    </header>
+
+    <section class="order-section">
+        <div class="order-card">
+            <h2>Оформить заказ</h2>
+            <form id="tgForm">
+                <div class="input-group">
+                    <label>Ваше имя</label>
+                    <input type="text" id="name" placeholder="Введите имя" required minlength="2">
+                </div>
+                <div class="input-group">
+                    <label>Номер телефона</label>
+                    <input type="tel" id="phone" placeholder="+996XXXXXXXXX" required pattern="^\+?[0-9]{10,15}$">
+                </div>
+                <div class="input-group">
+                    <label>Дата и время</label>
+                    <input type="datetime-local" id="date" required>
+                </div>
+                <button type="submit" class="btn-send">Заказать в Telegram</button>
+            </form>
+            <div id="status"></div>
+        </div>
+    </section>
+
+    <script>
+        // ТВОИ ДАННЫЕ (Замени на свои)
+        const TOKEN = "8611775401:AAFXqT3EZEbt1QUd6wb07HQTijTvjWtvVeM";
+        const CHAT_ID = "5164611389";
+
+        document.getElementById('tgForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const status = document.getElementById('status');
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const date = document.getElementById('date').value;
+
+            // Формируем текст
+            const message = `🍕 *Новый заказ!* \n👤 *Имя:* ${name} \n📞 *Тел:* ${phone} \n⏰ *Дата:* ${date}`;
+
+            status.innerText = "⏳ Отправка...";
+            status.style.color = "orange";
+
+            // Отправка через API Telegram
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message,
+                    parse_mode: "Markdown"
+                })
+            })
+            .then(res => {
+                if (res.ok) {
+                    status.innerText = "✅ Заказ успешно отправлен!";
+                    status.style.color = "green";
+                    this.reset();
+                } else {
+                    status.innerText = "❌ Ошибка. Проверь токен и ID.";
+                    status.style.color = "red";
+                }
+            })
+            .catch(() => {
+                status.innerText = "❌ Ошибка сети.";
+                status.style.color = "red";
+            });
+        });
+    </script>
+</body>
+</html>

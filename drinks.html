@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Напитки — Samat.D.K Café</title>
+<style>
+/* ---------------- Общие стили (соответствуют pizza.html) ---------------- */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f5f5f5; /* Фон как в пиццах */
+    overflow-x: hidden;
+}
+
+header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    margin-right: 15px;
+}
+nav a:hover, nav a.active { color: #c27b39; }
+
+/* Иконка корзины */
+.cart-icon {
+    position: fixed;
+    top: 20px;
+    right: 40px;
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+    cursor: pointer;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cart-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #ff4d4d;
+    color: white;
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 50%;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+@keyframes bump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+.bump { animation: bump 0.3s ease-out; }
+
+/* ---------------- Carousel ---------------- */
+main { padding-top: 100px; }
+.menu-section { padding: 50px 20px; text-align: center; }
+.menu-section h1 { font-size: 36px; margin-bottom: 30px; color: #333; } /* Цвет как в пиццах */
+
+/* Поле поиска */
+#searchInput {
+    padding: 10px 15px;
+    width: 300px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 30px;
+}
+
+.carousel-container {
+    position: relative;
+    width: 90%;
+    margin: 0 auto;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    display: flex;
+    gap: 20px;
+    padding: 40px 20px;
+    scroll-snap-type: x mandatory;
+}
+.carousel-container::-webkit-scrollbar { display: none; }
+
+/* Карточка товара */
+.item {
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    flex: 0 0 250px;
+    scroll-snap-align: center;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), filter 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+.item:hover {
+    transform: scale(1.3) translateY(-10px);
+    z-index: 10;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+.carousel-container:hover .item:not(:hover) {
+    transform: scale(0.9);
+    filter: brightness(0.7);
+}
+
+.item img { border-radius: 15px; width: 100%; height: 180px; object-fit: cover; margin-bottom: 10px; }
+.item h3 { font-size: 19px; margin: 5px 0; }
+.item p.price { font-size: 18px; color: #c27b39; font-weight: 600; margin-bottom: 10px; }
+
+/* Блок "Подробнее" */
+.details-box {
+    margin-bottom: 15px;
+    text-align: left;
+    flex-grow: 1;
+}
+.details-box summary { cursor: pointer; font-weight: 600; color: #333; font-size: 14px; }
+.details-box p { font-size: 13px; color: #666; margin-top: 5px; line-height: 1.4; }
+
+/* Кнопка */
+.item button.add-btn {
+    background: #c27b39;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto;
+}
+
+/* Стрелки */
+.arrow {
+    position: absolute;
+    top: 55%;
+    transform: translateY(-50%);
+    background: rgba(194, 123, 57, 0.8);
+    border: none;
+    color: #fff;
+    font-size: 30px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    z-index: 100;
+}
+.arrow-left { left: 5px; }
+.arrow-right { right: 5px; }
+
+/* ---------------- Корзина ---------------- */
+.cart-section {
+    position: fixed;
+    right: 20px;
+    top: 90px;
+    width: 320px;
+    background: #fff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1500;
+}
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+.qty-controls { display: flex; align-items: center; gap: 8px; }
+.qty-controls button {
+    background: #c27b39; color: white; border: none; width: 24px; height: 24px; border-radius: 5px; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo" style="font-weight: bold; font-size: 22px;">Samat.D.K Café</div>
+    <div class="cart-icon" onclick="toggleCart()" id="cartIcon">
+        🛒<span id="cartCount" class="cart-badge" style="display:none;">0</span>
+    </div>
+    <nav>
+        <a href="index.html">Главная</a>
+        <a href="menu.html">Меню</a>
+        <a href="pizza.html">Пиццы</a>
+        <a href="drinks.html" class="active">Напитки</a>
+        <a href="desserts.html">Десерты</a>
+        <a href="salads.html">Салаты</a>
+        <a href="burgers.html">Бургеры</a>
+    </nav>
+</header>
+
+<main>
+<section class="menu-section">
+    <h1>Наши напитки</h1>
+    
+    <input type="text" id="searchInput" placeholder="Поиск напитка ..." onkeyup="filterDrinks()">
+
+    <div style="position: relative;">
+        <button class="arrow arrow-left" onclick="scrollL()">&#10094;</button>
+        <div class="carousel-container" id="carousel"></div>
+        <button class="arrow arrow-right" onclick="scrollR()">&#10095;</button>
+    </div>
+</section>
+</main>
+
+<section class="cart-section" id="cartWindow">
+    <h2 style="margin-top:0">🛒 Корзина</h2>
+    <div id="cart-items"></div>
+    <div style="margin-top:20px; font-weight:bold; font-size: 20px;">Итого: <span id="cart-total">0</span> сом</div>
+</section>
+
+<script>
+const drinks = [
+    {name: "Капучино", price: 200, img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93", desc: "Нежная молочная пенка с ароматным кофе."},
+    {name: "Латте", price: 220, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 192614.png", desc: "Нежная молочная пенка с классическим латте."},
+    {name: "Эспрессо", price: 180, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 192716.png", desc: "Классический крепкий эспрессо."},
+    {name: "Мокко", price: 250, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 192803.png", desc: "Шоколадно-кофейное удовольствие."},
+    {name: "Чай", price: 150, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 192850.png", desc: "Согревающий классический чай."},
+    {name: "Смузи", price: 280, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 192941.png", desc: "Витаминный заряд из фруктов."},
+    {name: "Сок Яблоко", price: 289, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 204415.png", desc: "Натуральный яблочный сок."},
+    {name: "Сок Апельсин", price: 289, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 204524.png", desc: "Свежевыжатый апельсиновый вкус."},
+    {name: "Piko Персик", price: 289, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 204641.png", desc: "Сладкий персиковый нектар."},
+    {name: "Кока-Кола", price: 80, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 204757.png", desc: "Классическая газировка 0.5л."},
+    {name: "Фанта", price: 80, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 204913.png", desc: "Яркий апельсиновый вкус."},
+    {name: "Спрайт", price: 80, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205006.png", desc: "Освежающий лимон-лайм."},
+    {name: "BonAqua", price: 50, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205055.png", desc: "Чистая питьевая вода."},
+    {name: "Piko mini Мульт", price: 80, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205253.png", desc: "Детский формат, микс фруктов."},
+    {name: "Piko mini Яблоко", price: 80, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205419.png", desc: "Яблочный сок в мини-пакете."},
+    {name: "Piko mini Апел", price: 280, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205526.png", desc: "Апельсиновый сок в мини-пакете."},
+    {name: "Fuse tea Манго", price: 100, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205649.png", desc: "Холодный чай со вкусом манго."},
+    {name: "Fuse tea Ананас", price: 100, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205847.png", desc: "Тропический микс чая."},
+    {name: "Piko Апельсин", price: 100, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 205915.png", desc: "Классический апельсиновый нектар."},
+    {name: "Piko Виноград-Алоэ", price: 100, img: "C:\\Users\\Acer\\Pictures\\Screenshots\\Снимок экрана 2025-11-23 210102.png", desc: "Освежающий виноград с алоэ."}
+];
+
+const carousel = document.getElementById('carousel');
+function scrollL() { carousel.scrollBy({ left: -270, behavior: 'smooth' }); }
+function scrollR() { carousel.scrollBy({ left: 270, behavior: 'smooth' }); }
+
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+function renderDrinks(list) {
+    carousel.innerHTML = '';
+    list.forEach(d => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+            <img src="${d.img}">
+            <h3>${d.name}</h3>
+            <p class="price">${d.price} сом</p>
+            <details class="details-box">
+                <summary>Подробнее</summary>
+                <p>${d.desc}</p>
+            </details>
+            <button class="add-btn" onclick="addToCart('${d.name}', ${d.price})">В корзину</button>
+        `;
+        carousel.appendChild(div);
+    });
+}
+
+// УНИВЕРСАЛЬНЫЙ ФИЛЬТР (Поиск по названию ИЛИ цене)
+function filterDrinks() {
+    const val = document.getElementById('searchInput').value.toLowerCase().trim();
+    let filtered;
+    
+    if (!isNaN(val) && val !== "") {
+        // Если введено число — ищем по цене (точное совпадение)
+        const priceVal = parseInt(val);
+        filtered = drinks.filter(d => d.price === priceVal);
+    } else {
+        // Иначе ищем по названию
+        filtered = drinks.filter(d => d.name.toLowerCase().includes(val));
+    }
+    renderDrinks(filtered);
+}
+
+function toggleCart() {
+    const win = document.getElementById('cartWindow');
+    win.style.display = (win.style.display === "block") ? "none" : "block";
+}
+
+function addToCart(name, price) {
+    const existing = cart.find(i => i.name === name);
+    if (existing) existing.qty++;
+    else cart.push({name, price, qty: 1});
+    
+    const icon = document.getElementById('cartIcon');
+    icon.classList.add('bump');
+    setTimeout(() => icon.classList.remove('bump'), 300);
+    saveAndRender();
+}
+
+function changeQty(name, delta) {
+    const item = cart.find(i => i.name === name);
+    if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
+    }
+    saveAndRender();
+}
+
+function saveAndRender() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    renderCart();
+}
+
+function renderCart() {
+    const container = document.getElementById('cart-items');
+    const badge = document.getElementById('cartCount');
+    container.innerHTML = '';
+    let total = 0;
+    let totalQty = 0;
+
+    cart.forEach(item => {
+        total += item.qty * item.price;
+        totalQty += item.qty;
+        const div = document.createElement('div');
+        div.classList.add('cart-item');
+        div.innerHTML = `
+            <span style="font-size:14px; width:120px;">${item.name}</span>
+            <div class="qty-controls">
+                <button onclick="changeQty('${item.name}', -1)">-</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty('${item.name}', 1)">+</button>
+            </div>
+            <span style="font-weight:bold;">${item.qty * item.price} с.</span>
+        `;
+        container.appendChild(div);
+    });
+    
+    document.getElementById('cart-total').textContent = total;
+    badge.textContent = totalQty;
+    badge.style.display = totalQty > 0 ? "block" : "none";
+}
+
+renderDrinks(drinks);
+renderCart();
+</script>
+</body>
+</html>
